@@ -1,0 +1,567 @@
+{
+  "provider": "autogen_agentchat.teams.RoundRobinGroupChat",
+  "component_type": "team",
+  "version": 1,
+  "component_version": 1,
+  "description": "Você é o Quality Orchestrator AI, o coordenador geral da auditoria de qualidade de software.\n\nPAPEL:\n- Organizar a sequência da auditoria.\n- Dar início à análise.\n- Garantir que cada agente fale na sua vez e sobre sua área.\n- Integrar as respostas para manter coerência.\n- Encerrar a auditoria com a conclusão geral.\n\nOBJETIVO:\n- Guiar todo o fluxo da auditoria do início ao fim.\n- Garantir que não haja saltos ou quebras na ordem dos agentes.\n\nESTILO DE COMUNICAÇÃO:\n- Formal, objetivo, direto.\n- Deve direcionar, resumir e coordenar.\n\nLIMITAÇÕES:\n- Não deve realizar análises de requisitos, arquitetura, código, testes, DevOps, segurança ou métricas.\n- Seu papel é apenas coordenar e integrar.",
+  "label": "default_team17",
+  "config": {
+    "participants": [
+      {
+        "provider": "autogen_agentchat.agents.AssistantAgent",
+        "component_type": "agent",
+        "version": 1,
+        "component_version": 1,
+        "description": "Função: Auditor de requisitos — analisa a clareza, completude e rastreabilidade das especificações.\n\nPersonalidade:\nUm analista técnico minucioso e questionador, movido pela busca da verdade e pela consistência documental.\n\nGosta: requisitos numerados, linguagem objetiva e ligação clara entre requisito e teste.\n\nNão gosta: ambiguidades, contradições e termos subjetivos como “rápido” ou “fácil”.\nÉ crítico, argumentativo e detalhista ao extremo, sempre pedindo justificativas.",
+        "label": "Requirements Rewiever",
+        "config": {
+          "name": "analistaDR",
+          "model_client": {
+            "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+            "component_type": "model",
+            "version": 1,
+            "component_version": 1,
+            "description": "Chat completion client for OpenAI hosted models.",
+            "label": "OpenAIChatCompletionClient",
+            "config": {
+              "model": "gemini-2.0-flash",
+              "api_key": "AIzaSyCdBCTlNa7mYVdLArwYXbBjmAKE1qvH5TM"
+            }
+          },
+          "workbench": {
+            "provider": "autogen_core.tools.StaticWorkbench",
+            "component_type": "workbench",
+            "version": 1,
+            "component_version": 1,
+            "description": "A workbench that provides a static set of tools that do not change after\neach tool execution.",
+            "label": "StaticWorkbench",
+            "config": {
+              "tools": [
+                {
+                  "provider": "autogen_core.tools.FunctionTool",
+                  "component_type": "tool",
+                  "version": 1,
+                  "component_version": 1,
+                  "description": "Create custom tools by wrapping standard Python functions.",
+                  "label": "FunctionTool",
+                  "config": {
+                    "source_code": "def calculator(a: float, b: float, operator: str) -> str:\n    try:\n        if operator == \"+\":\n            return str(a + b)\n        elif operator == \"-\":\n            return str(a - b)\n        elif operator == \"*\":\n            return str(a * b)\n        elif operator == \"/\":\n            if b == 0:\n                return \"Error: Division by zero\"\n            return str(a / b)\n        else:\n            return \"Error: Invalid operator. Please use +, -, *, or /\"\n    except Exception as e:\n        return f\"Error: {str(e)}\"\n",
+                    "name": "calculator",
+                    "description": "A simple calculator that performs basic arithmetic operations",
+                    "global_imports": [],
+                    "has_cancellation_support": false
+                  }
+                }
+              ]
+            }
+          },
+          "model_context": {
+            "provider": "autogen_core.model_context.UnboundedChatCompletionContext",
+            "component_type": "chat_completion_context",
+            "version": 1,
+            "component_version": 1,
+            "description": "An unbounded chat completion context that keeps a view of the all the messages.",
+            "label": "UnboundedChatCompletionContext",
+            "config": {}
+          },
+          "description": "An agent that provides assistance with ability to use tools.",
+          "system_message": "Você é o Requirements Reviewer, analista de requisitos da auditoria.\n\nPAPEL:\n- Avaliar requisitos quanto a clareza, completude, consistência e rastreabilidade.\n\nOBJETIVO:\n- Identificar requisitos ambíguos, incompletos ou conflitantes.\n- Garantir que os requisitos sejam testáveis e verificáveis.\n\nESTILO DE COMUNICAÇÃO:\n- Analítico, detalhado e baseado em texto.\n- Deve citar exemplos quando necessário.\n\nLIMITAÇÕES:\n- Não deve avaliar arquitetura.\n- Não deve analisar código.\n- Não deve comentar sobre testes, segurança ou DevOps.",
+          "model_client_stream": false,
+          "reflect_on_tool_use": false,
+          "tool_call_summary_format": "{result}",
+          "metadata": {}
+        }
+      },
+      {
+        "provider": "autogen_agentchat.agents.AssistantAgent",
+        "component_type": "agent",
+        "version": 1,
+        "component_version": 1,
+        "description": "Função: Avaliar a arquitetura de software em termos de escalabilidade, modularidade e boas práticas de design.\n\nPersonalidade:\nÉ um arquiteto racional e visionário, obcecado por padrões elegantes e soluções limpas.\n\nGosta: camadas bem definidas, acoplamento fraco, coesão alta e documentação técnica atualizada.\n\nNão gosta: arquitetura monolítica, falta de versionamento e dependências cíclicas.\nTem uma postura crítica e pedagógica, explicando sempre o “porquê” das suas observações.",
+        "label": "Architecture Inpector",
+        "config": {
+          "name": "achitectureinp",
+          "model_client": {
+            "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+            "component_type": "model",
+            "version": 1,
+            "component_version": 1,
+            "description": "Chat completion client for OpenAI hosted models.",
+            "label": "OpenAIChatCompletionClient",
+            "config": {
+              "model": "gemini-2.0-flash",
+              "api_key": "AIzaSyCdBCTlNa7mYVdLArwYXbBjmAKE1qvH5TM"
+            }
+          },
+          "workbench": {
+            "provider": "autogen_core.tools.StaticWorkbench",
+            "component_type": "workbench",
+            "version": 1,
+            "component_version": 1,
+            "description": "A workbench that provides a static set of tools that do not change after\neach tool execution.",
+            "label": "StaticWorkbench",
+            "config": {
+              "tools": [
+                {
+                  "provider": "autogen_core.tools.FunctionTool",
+                  "component_type": "tool",
+                  "version": 1,
+                  "component_version": 1,
+                  "description": "Create custom tools by wrapping standard Python functions.",
+                  "label": "FunctionTool",
+                  "config": {
+                    "source_code": "def calculator(a: float, b: float, operator: str) -> str:\n    try:\n        if operator == \"+\":\n            return str(a + b)\n        elif operator == \"-\":\n            return str(a - b)\n        elif operator == \"*\":\n            return str(a * b)\n        elif operator == \"/\":\n            if b == 0:\n                return \"Error: Division by zero\"\n            return str(a / b)\n        else:\n            return \"Error: Invalid operator. Please use +, -, *, or /\"\n    except Exception as e:\n        return f\"Error: {str(e)}\"\n",
+                    "name": "calculator",
+                    "description": "A simple calculator that performs basic arithmetic operations",
+                    "global_imports": [],
+                    "has_cancellation_support": false
+                  }
+                }
+              ]
+            }
+          },
+          "model_context": {
+            "provider": "autogen_core.model_context.UnboundedChatCompletionContext",
+            "component_type": "chat_completion_context",
+            "version": 1,
+            "component_version": 1,
+            "description": "An unbounded chat completion context that keeps a view of the all the messages.",
+            "label": "UnboundedChatCompletionContext",
+            "config": {}
+          },
+          "description": "An agent that provides assistance with ability to use tools.",
+          "system_message": "Você é o Architecture Inspector. Sua única função é analisar a visão geral da arquitetura de software fornecida.\n\n**Regras:**\n1.  Receba a análise de requisitos do agente anterior como contexto.\n2.  Sua tarefa principal é avaliar a arquitetura (modularidade, acoplamento, escalabilidade) com base na descrição fornecida.\n3.  **Não se desvie de sua função.** Mesmo que os requisitos não sejam perfeitos, sua análise deve focar estritamente na arquitetura descrita.\n4.  Gere um \"Relatório de Análise de Arquitetura\" com seus pontos e passe para o próximo especialista.\n",
+          "model_client_stream": false,
+          "reflect_on_tool_use": false,
+          "tool_call_summary_format": "{result}",
+          "metadata": {}
+        }
+      },
+      {
+        "provider": "autogen_agentchat.agents.AssistantAgent",
+        "component_type": "agent",
+        "version": 1,
+        "component_version": 1,
+        "description": "Função: Especialista em boas práticas de codificação, análise estática e refatoração.\n\nPersonalidade:\nTem o perfil de um mentor experiente e exigente. Fala de forma técnica, direta e didática.\n\nGosta: código limpo, documentação inline, testes unitários e padronização de estilo.\n\nNão gosta: comentários inúteis, variáveis sem contexto e violações de convenções PEP8 ou SOLID.\nÉ perfeccionista e pedagógico — ensina ao mesmo tempo que corrige.",
+        "label": "Code Practices Advisor",
+        "config": {
+          "name": "codePr",
+          "model_client": {
+            "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+            "component_type": "model",
+            "version": 1,
+            "component_version": 1,
+            "description": "Chat completion client for OpenAI hosted models.",
+            "label": "OpenAIChatCompletionClient",
+            "config": {
+              "model": "gemini-2.0-flash",
+              "api_key": "AIzaSyCdBCTlNa7mYVdLArwYXbBjmAKE1qvH5TM"
+            }
+          },
+          "workbench": {
+            "provider": "autogen_core.tools.StaticWorkbench",
+            "component_type": "workbench",
+            "version": 1,
+            "component_version": 1,
+            "description": "A workbench that provides a static set of tools that do not change after\neach tool execution.",
+            "label": "StaticWorkbench",
+            "config": {
+              "tools": [
+                {
+                  "provider": "autogen_core.tools.FunctionTool",
+                  "component_type": "tool",
+                  "version": 1,
+                  "component_version": 1,
+                  "description": "Create custom tools by wrapping standard Python functions.",
+                  "label": "FunctionTool",
+                  "config": {
+                    "source_code": "def calculator(a: float, b: float, operator: str) -> str:\n    try:\n        if operator == \"+\":\n            return str(a + b)\n        elif operator == \"-\":\n            return str(a - b)\n        elif operator == \"*\":\n            return str(a * b)\n        elif operator == \"/\":\n            if b == 0:\n                return \"Error: Division by zero\"\n            return str(a / b)\n        else:\n            return \"Error: Invalid operator. Please use +, -, *, or /\"\n    except Exception as e:\n        return f\"Error: {str(e)}\"\n",
+                    "name": "calculator",
+                    "description": "A simple calculator that performs basic arithmetic operations",
+                    "global_imports": [],
+                    "has_cancellation_support": false
+                  }
+                }
+              ]
+            }
+          },
+          "model_context": {
+            "provider": "autogen_core.model_context.UnboundedChatCompletionContext",
+            "component_type": "chat_completion_context",
+            "version": 1,
+            "component_version": 1,
+            "description": "An unbounded chat completion context that keeps a view of the all the messages.",
+            "label": "UnboundedChatCompletionContext",
+            "config": {}
+          },
+          "description": "An agent that provides assistance with ability to use tools.",
+          "system_message": "Você é o Code Practices Advisor, consultor de boas práticas de código.\n\nPAPEL:\n- Avaliar qualidade do código, legibilidade, simplicidade e padrões como Clean Code.\n\nOBJETIVO:\n- Identificar violações de boas práticas.\n- Sugerir melhorias no estilo e estrutura do código.\n\nESTILO DE COMUNICAÇÃO:\n- Direto, técnico e baseado em boas práticas de programação.\n\nLIMITAÇÕES:\n- Não deve opinar sobre requisitos.\n- Não deve discutir arquitetura geral.\n- Não deve fazer análises de segurança, testes ou DevOps.\n",
+          "model_client_stream": false,
+          "reflect_on_tool_use": false,
+          "tool_call_summary_format": "{result}",
+          "metadata": {}
+        }
+      },
+      {
+        "provider": "autogen_agentchat.agents.AssistantAgent",
+        "component_type": "agent",
+        "version": 1,
+        "component_version": 1,
+        "description": "Função: Criar e otimizar estratégias de teste, garantindo cobertura total e confiabilidade do sistema.\n\nPersonalidade:\nUm estrategista metódico e preventivo, com raciocínio lógico e foco em mitigação de riscos.\n\nGosta: testes automatizados, relatórios de cobertura e integração contínua.\n\nNão gosta: falta de rastreabilidade entre casos de teste e requisitos.\nAge como um engenheiro de controle de qualidade militar, documentando tudo e exigindo justificativas claras.",
+        "label": "Test Estrategist",
+        "config": {
+          "name": "testeestrategist",
+          "model_client": {
+            "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+            "component_type": "model",
+            "version": 1,
+            "component_version": 1,
+            "description": "Chat completion client for OpenAI hosted models.",
+            "label": "OpenAIChatCompletionClient",
+            "config": {
+              "model": "gemini-2.0-flash",
+              "api_key": "AIzaSyCdBCTlNa7mYVdLArwYXbBjmAKE1qvH5TM"
+            }
+          },
+          "workbench": {
+            "provider": "autogen_core.tools.StaticWorkbench",
+            "component_type": "workbench",
+            "version": 1,
+            "component_version": 1,
+            "description": "A workbench that provides a static set of tools that do not change after\neach tool execution.",
+            "label": "StaticWorkbench",
+            "config": {
+              "tools": [
+                {
+                  "provider": "autogen_core.tools.FunctionTool",
+                  "component_type": "tool",
+                  "version": 1,
+                  "component_version": 1,
+                  "description": "Create custom tools by wrapping standard Python functions.",
+                  "label": "FunctionTool",
+                  "config": {
+                    "source_code": "def calculator(a: float, b: float, operator: str) -> str:\n    try:\n        if operator == \"+\":\n            return str(a + b)\n        elif operator == \"-\":\n            return str(a - b)\n        elif operator == \"*\":\n            return str(a * b)\n        elif operator == \"/\":\n            if b == 0:\n                return \"Error: Division by zero\"\n            return str(a / b)\n        else:\n            return \"Error: Invalid operator. Please use +, -, *, or /\"\n    except Exception as e:\n        return f\"Error: {str(e)}\"\n",
+                    "name": "calculator",
+                    "description": "A simple calculator that performs basic arithmetic operations",
+                    "global_imports": [],
+                    "has_cancellation_support": false
+                  }
+                }
+              ]
+            }
+          },
+          "model_context": {
+            "provider": "autogen_core.model_context.UnboundedChatCompletionContext",
+            "component_type": "chat_completion_context",
+            "version": 1,
+            "component_version": 1,
+            "description": "An unbounded chat completion context that keeps a view of the all the messages.",
+            "label": "UnboundedChatCompletionContext",
+            "config": {}
+          },
+          "description": "An agent that provides assistance with ability to use tools.",
+          "system_message": "Você é o Test Strategist, engenheiro de testes da auditoria.\n\nPAPEL:\n- Definir estratégias de testes e critérios de aceitação.\n\nOBJETIVO:\n- Recomendar tipos de testes: unitários, integração, sistema, regressão e não funcionais.\n- Identificar lacunas e riscos de cobertura de testes.\n\nESTILO DE COMUNICAÇÃO:\n- Metódico, estruturado e orientado a cenários.\n\nLIMITAÇÕES:\n- Não deve analisar arquitetura.\n- Não deve revisar código.\n- Não deve avaliar segurança ou DevOps.",
+          "model_client_stream": false,
+          "reflect_on_tool_use": false,
+          "tool_call_summary_format": "{result}",
+          "metadata": {}
+        }
+      },
+      {
+        "provider": "autogen_agentchat.agents.AssistantAgent",
+        "component_type": "agent",
+        "version": 1,
+        "component_version": 1,
+        "description": "Função: Analisar vulnerabilidades, proteger dados e garantir conformidade com normas de segurança.\n\nPersonalidade:\nÉ um agente meticuloso, quase paranoico, obcecado por segurança e privacidade.\n\nGosta: criptografia forte, auditorias, controle de acesso.\n\nNão gosta: exposição de dados, autenticação fraca, bibliotecas desatualizadas.\nÉ extremamente técnico e direto — fala com base em normas como OWASP e ISO 27001.",
+        "label": "Security Analyst",
+        "config": {
+          "name": "securityan",
+          "model_client": {
+            "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+            "component_type": "model",
+            "version": 1,
+            "component_version": 1,
+            "description": "Chat completion client for OpenAI hosted models.",
+            "label": "OpenAIChatCompletionClient",
+            "config": {
+              "model": "gemini-2.0-flash",
+              "api_key": "AIzaSyCdBCTlNa7mYVdLArwYXbBjmAKE1qvH5TM"
+            }
+          },
+          "workbench": {
+            "provider": "autogen_core.tools.StaticWorkbench",
+            "component_type": "workbench",
+            "version": 1,
+            "component_version": 1,
+            "description": "A workbench that provides a static set of tools that do not change after\neach tool execution.",
+            "label": "StaticWorkbench",
+            "config": {
+              "tools": [
+                {
+                  "provider": "autogen_core.tools.FunctionTool",
+                  "component_type": "tool",
+                  "version": 1,
+                  "component_version": 1,
+                  "description": "Create custom tools by wrapping standard Python functions.",
+                  "label": "FunctionTool",
+                  "config": {
+                    "source_code": "def calculator(a: float, b: float, operator: str) -> str:\n    try:\n        if operator == \"+\":\n            return str(a + b)\n        elif operator == \"-\":\n            return str(a - b)\n        elif operator == \"*\":\n            return str(a * b)\n        elif operator == \"/\":\n            if b == 0:\n                return \"Error: Division by zero\"\n            return str(a / b)\n        else:\n            return \"Error: Invalid operator. Please use +, -, *, or /\"\n    except Exception as e:\n        return f\"Error: {str(e)}\"\n",
+                    "name": "calculator",
+                    "description": "A simple calculator that performs basic arithmetic operations",
+                    "global_imports": [],
+                    "has_cancellation_support": false
+                  }
+                }
+              ]
+            }
+          },
+          "model_context": {
+            "provider": "autogen_core.model_context.UnboundedChatCompletionContext",
+            "component_type": "chat_completion_context",
+            "version": 1,
+            "component_version": 1,
+            "description": "An unbounded chat completion context that keeps a view of the all the messages.",
+            "label": "UnboundedChatCompletionContext",
+            "config": {}
+          },
+          "description": "An agent that provides assistance with ability to use tools.",
+          "system_message": "Você é o Security Analyst. Sua única função é identificar potenciais vulnerabilidades e falhas de segurança no projeto.\n\n**Regras:**\n1.  Use todos os relatórios anteriores (Requisitos, Arquitetura, Código, CI/CD) como base para sua análise.\n2.  Sua tarefa é identificar riscos de segurança específicos para um sistema de e-commerce com microsserviços (ex: vulnerabilidades em APIs, proteção de dados de pagamento, segurança no login, XSS, SQL Injection).\n3.  Seja específico. Em vez de dizer \"verificar segurança\", aponte \"risco de exposição de dados de cartão de crédito no serviço de Pagamentos; recomendar tokenização\".\n4.  **Sua análise deve ser estritamente sobre segurança.** Não se desvie para outros tópicos.\n5.  Produza um \"Relatório de Análise de Segurança\" com as vulnerabilidades encontradas e recomendações de mitigação.\n",
+          "model_client_stream": false,
+          "reflect_on_tool_use": false,
+          "tool_call_summary_format": "{result}",
+          "metadata": {}
+        }
+      },
+      {
+        "provider": "autogen_agentchat.agents.AssistantAgent",
+        "component_type": "agent",
+        "version": 1,
+        "component_version": 1,
+        "description": "Função: Automatizar o ciclo de vida do software, implementando CI/CD, monitoramento e versionamento.\n\nPersonalidade:\nPragmático e focado em automação total. Gosta de pipelines otimizados e infraestrutura como código.\n\nGosta: integração contínua, logs limpos e implantações sem downtime.\n\nNão gosta: processos manuais, falhas de build e falta de rollback automatizado.\nÉ meticuloso, mas direto e prático, sempre buscando o equilíbrio entre eficiência e segurança.",
+        "label": "DevOps Enginer ",
+        "config": {
+          "name": "devops",
+          "model_client": {
+            "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+            "component_type": "model",
+            "version": 1,
+            "component_version": 1,
+            "description": "Chat completion client for OpenAI hosted models.",
+            "label": "OpenAIChatCompletionClient",
+            "config": {
+              "model": "gemini-2.0-flash",
+              "api_key": "AIzaSyCdBCTlNa7mYVdLArwYXbBjmAKE1qvH5TM"
+            }
+          },
+          "workbench": {
+            "provider": "autogen_core.tools.StaticWorkbench",
+            "component_type": "workbench",
+            "version": 1,
+            "component_version": 1,
+            "description": "A workbench that provides a static set of tools that do not change after\neach tool execution.",
+            "label": "StaticWorkbench",
+            "config": {
+              "tools": [
+                {
+                  "provider": "autogen_core.tools.FunctionTool",
+                  "component_type": "tool",
+                  "version": 1,
+                  "component_version": 1,
+                  "description": "Create custom tools by wrapping standard Python functions.",
+                  "label": "FunctionTool",
+                  "config": {
+                    "source_code": "def calculator(a: float, b: float, operator: str) -> str:\n    try:\n        if operator == \"+\":\n            return str(a + b)\n        elif operator == \"-\":\n            return str(a - b)\n        elif operator == \"*\":\n            return str(a * b)\n        elif operator == \"/\":\n            if b == 0:\n                return \"Error: Division by zero\"\n            return str(a / b)\n        else:\n            return \"Error: Invalid operator. Please use +, -, *, or /\"\n    except Exception as e:\n        return f\"Error: {str(e)}\"\n",
+                    "name": "calculator",
+                    "description": "A simple calculator that performs basic arithmetic operations",
+                    "global_imports": [],
+                    "has_cancellation_support": false
+                  }
+                }
+              ]
+            }
+          },
+          "model_context": {
+            "provider": "autogen_core.model_context.UnboundedChatCompletionContext",
+            "component_type": "chat_completion_context",
+            "version": 1,
+            "component_version": 1,
+            "description": "An unbounded chat completion context that keeps a view of the all the messages.",
+            "label": "UnboundedChatCompletionContext",
+            "config": {}
+          },
+          "description": "An agent that provides assistance with ability to use tools.",
+          "system_message": "Você é o DevOps Engineer. Sua única função é desenhar um plano de automação de CI/CD (Integração Contínua e Entrega Contínua) para o projeto.\n\n**Regras:**\n1.  Analise os relatórios de Requisitos, Arquitetura e Código para entender a estrutura do projeto (ex: microsserviços, tecnologias como React/PHP).\n2.  Sua tarefa é propor um pipeline de CI/CD. Descreva as etapas principais (ex: `build`, `test`, `deploy`) e sugira ferramentas adequadas (ex: Jenkins, GitHub Actions, Docker).\n3.  Foque exclusivamente em automação, qualidade contínua e infraestrutura. **Não comente sobre o trabalho dos especialistas anteriores**, apenas use as informações deles para embasar seu plano.\n4.  Ao final, produza um \"Plano de Automação de CI/CD\" e entregue-o ao orquestrador.",
+          "model_client_stream": false,
+          "reflect_on_tool_use": false,
+          "tool_call_summary_format": "{result}",
+          "metadata": {}
+        }
+      },
+      {
+        "provider": "autogen_agentchat.agents.AssistantAgent",
+        "component_type": "agent",
+        "version": 1,
+        "component_version": 1,
+        "description": "Função: Compilar métricas de desempenho e gerar o relatório final.\n\nPersonalidade:\nÉ um analista quantitativo e lógico, apaixonado por gráficos e padrões estatísticos.\n\nGosta: dados confiáveis, gráficos bem estruturados, relatórios padronizados.\n\nNão gosta: conclusões sem evidências, números soltos sem contexto.\nÉ impessoal e metódico — fala por números e indicadores.",
+        "label": "Matrics e Reporting Agent",
+        "config": {
+          "name": "metricsreporting",
+          "model_client": {
+            "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+            "component_type": "model",
+            "version": 1,
+            "component_version": 1,
+            "description": "Chat completion client for OpenAI hosted models.",
+            "label": "OpenAIChatCompletionClient",
+            "config": {
+              "model": "gemini-2.0-flash",
+              "api_key": "AIzaSyCdBCTlNa7mYVdLArwYXbBjmAKE1qvH5TM"
+            }
+          },
+          "workbench": {
+            "provider": "autogen_core.tools.StaticWorkbench",
+            "component_type": "workbench",
+            "version": 1,
+            "component_version": 1,
+            "description": "A workbench that provides a static set of tools that do not change after\neach tool execution.",
+            "label": "StaticWorkbench",
+            "config": {
+              "tools": [
+                {
+                  "provider": "autogen_core.tools.FunctionTool",
+                  "component_type": "tool",
+                  "version": 1,
+                  "component_version": 1,
+                  "description": "Create custom tools by wrapping standard Python functions.",
+                  "label": "FunctionTool",
+                  "config": {
+                    "source_code": "def calculator(a: float, b: float, operator: str) -> str:\n    try:\n        if operator == \"+\":\n            return str(a + b)\n        elif operator == \"-\":\n            return str(a - b)\n        elif operator == \"*\":\n            return str(a * b)\n        elif operator == \"/\":\n            if b == 0:\n                return \"Error: Division by zero\"\n            return str(a / b)\n        else:\n            return \"Error: Invalid operator. Please use +, -, *, or /\"\n    except Exception as e:\n        return f\"Error: {str(e)}\"\n",
+                    "name": "calculator",
+                    "description": "A simple calculator that performs basic arithmetic operations",
+                    "global_imports": [],
+                    "has_cancellation_support": false
+                  }
+                }
+              ]
+            }
+          },
+          "model_context": {
+            "provider": "autogen_core.model_context.UnboundedChatCompletionContext",
+            "component_type": "chat_completion_context",
+            "version": 1,
+            "component_version": 1,
+            "description": "An unbounded chat completion context that keeps a view of the all the messages.",
+            "label": "UnboundedChatCompletionContext",
+            "config": {}
+          },
+          "description": "An agent that provides assistance with ability to use tools.",
+          "system_message": "Você é o Metrics & Reporting Agent. Sua função é consolidar todas as análises dos especialistas em um único relatório de auditoria final.\n\n**Regras:**\n1.  Você será o último agente a ser chamado pelo orquestrador.\n2.  Sua única tarefa é receber todos os relatórios gerados (Requisitos, Arquitetura, Código, Testes, CI/CD, Segurança) e organizá-los de forma clara e profissional.\n3.  Crie um sumário executivo no início do relatório, destacando os 3 a 5 pontos mais críticos identificados durante toda a auditoria.\n4.  Estruture o relatório final com seções claras para cada área de análise. Apenas formate e organize as informações, **não adicione novas opiniões ou análises**.\n5.  Apresente este \"Relatório Final de Auditoria de Qualidade\" como a conclusão do processo.\n",
+          "model_client_stream": false,
+          "reflect_on_tool_use": false,
+          "tool_call_summary_format": "{result}",
+          "metadata": {}
+        }
+      },
+      {
+        "provider": "autogen_agentchat.agents.AssistantAgent",
+        "component_type": "agent",
+        "version": 1,
+        "component_version": 1,
+        "description": "Você é o Quality Orchestrator AI, o coordenador geral da auditoria de qualidade de software.",
+        "label": "Quality Orchestrator AI",
+        "config": {
+          "name": "Orquestrador",
+          "model_client": {
+            "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+            "component_type": "model",
+            "version": 1,
+            "component_version": 1,
+            "description": "Chat completion client for OpenAI hosted models.",
+            "label": "OpenAIChatCompletionClient",
+            "config": {
+              "model": "gemini-2.0-flash",
+              "api_key": "AIzaSyCdBCTlNa7mYVdLArwYXbBjmAKE1qvH5TM"
+            }
+          },
+          "workbench": {
+            "provider": "autogen_core.tools.StaticWorkbench",
+            "component_type": "workbench",
+            "version": 1,
+            "component_version": 1,
+            "description": "A workbench that provides a static set of tools that do not change after\neach tool execution.",
+            "label": "StaticWorkbench",
+            "config": {
+              "tools": [
+                {
+                  "provider": "autogen_core.tools.FunctionTool",
+                  "component_type": "tool",
+                  "version": 1,
+                  "component_version": 1,
+                  "description": "Create custom tools by wrapping standard Python functions.",
+                  "label": "FunctionTool",
+                  "config": {
+                    "source_code": "def calculator(a: float, b: float, operator: str) -> str:\n    try:\n        if operator == \"+\":\n            return str(a + b)\n        elif operator == \"-\":\n            return str(a - b)\n        elif operator == \"*\":\n            return str(a * b)\n        elif operator == \"/\":\n            if b == 0:\n                return \"Error: Division by zero\"\n            return str(a / b)\n        else:\n            return \"Error: Invalid operator. Please use +, -, *, or /\"\n    except Exception as e:\n        return f\"Error: {str(e)}\"\n",
+                    "name": "calculator",
+                    "description": "A simple calculator that performs basic arithmetic operations",
+                    "global_imports": [],
+                    "has_cancellation_support": false
+                  }
+                }
+              ]
+            }
+          },
+          "model_context": {
+            "provider": "autogen_core.model_context.UnboundedChatCompletionContext",
+            "component_type": "chat_completion_context",
+            "version": 1,
+            "component_version": 1,
+            "description": "An unbounded chat completion context that keeps a view of the all the messages.",
+            "label": "UnboundedChatCompletionContext",
+            "config": {}
+          },
+          "description": "An agent that provides assistance with ability to use tools.",
+          "system_message": "Você é o Quality Orchestrator AI, o gerente de um projeto de auditoria de qualidade de software. Sua função é coordenar uma equipe de agentes especializados para produzir um relatório de auditoria completo, seguindo uma ordem estrita.\n\n**SEU PLANO DE AÇÃO É O SEGUINTE E NÃO PODE SER DESVIADO:**\n\n1.  **Passo 1: Requisitos:** Chame o **Requirements Reviewer**. Peça a ele para gerar um \"Relatório de Análise de Requisitos\". Aguarde o relatório dele.\n\n2.  **Passo 2: Arquitetura:** Entregue o relatório do passo 1 ao **Architecture Inspector**. Peça a ele para gerar um \"Relatório de Análise de Arquitetura\". Aguarde o relatório dele.\n\n3.  **Passo 3: Código:** Entregue os relatórios dos passos 1 e 2 ao **Code Practices Advisor**. Peça a ele para gerar um \"Relatório de Boas Práticas de Código\". Aguarde o relatório dele.\n\n4.  **Passo 4: Estratégia de Testes:** Entregue TODOS os relatórios anteriores ao **Test Strategist**. Peça a ele para gerar uma \"Estratégia de Testes\". Aguarde a resposta dele.\n\n5.  **Passo 5: DevOps:** Entregue TODOS os relatórios anteriores ao **DevOps Engineer**. Peça a ele para gerar um \"Plano de Automação de CI/CD\". Aguarde a resposta dele.\n\n6.  **Passo 6: Segurança:** Entregue TODOS os relatórios anteriores ao **Security Analyst**. Peça a ele para gerar um \"Relatório de Análise de Segurança\". Aguarde a resposta dele.\n\n7.  **Passo 7: Relatório Final:** APENAS QUANDO TODOS OS 6 PASSOS ANTERIORES ESTIVEREM COMPLETOS, chame o **Metrics & Reporting Agent**. Entregue a ele TODOS os seis relatórios e peça para ele consolidar o \"Relatório Final de Auditoria de Qualidade\".\n\n**Sua tarefa é garantir que cada passo seja executado na ordem correta, sem pular nenhum especialista.**\n",
+          "model_client_stream": false,
+          "reflect_on_tool_use": false,
+          "tool_call_summary_format": "{result}",
+          "metadata": {}
+        }
+      }
+    ],
+    "termination_condition": {
+      "provider": "autogen_agentchat.base.OrTerminationCondition",
+      "component_type": "termination",
+      "version": 1,
+      "component_version": 1,
+      "label": "OrTerminationCondition",
+      "config": {
+        "conditions": [
+          {
+            "provider": "autogen_agentchat.conditions.TextMentionTermination",
+            "component_type": "termination",
+            "version": 1,
+            "component_version": 1,
+            "description": "Terminate the conversation if a specific text is mentioned.",
+            "label": "TextMentionTermination",
+            "config": {
+              "text": "TERMINATE"
+            }
+          },
+          {
+            "provider": "autogen_agentchat.conditions.MaxMessageTermination",
+            "component_type": "termination",
+            "version": 1,
+            "component_version": 1,
+            "description": "Terminate the conversation after a maximum number of messages have been exchanged.",
+            "label": "MaxMessageTermination",
+            "config": {
+              "max_messages": 5,
+              "include_agent_event": false
+            }
+          }
+        ]
+      }
+    },
+    "emit_team_events": false
+  }
+}
